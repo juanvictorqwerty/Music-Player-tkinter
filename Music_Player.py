@@ -4,7 +4,7 @@ import os
 
 root = Tk()
 root.title("My Music")
-root.geometry("900x600")
+root.geometry("500x300")
 
 pygame.mixer.init() #initialise the audio functions
 
@@ -23,14 +23,14 @@ previous_button_image = PhotoImage(file ="Previous.png")
 control_frame = Frame(root)
 control_frame.pack()
 
-play_button = Button (control_frame,image=play_button_image,borderwidth=0,width=200,height=100)
-pause_button = Button (control_frame,image=pause_button_image,borderwidth=0,width=200,height=100)
-next_button = Button (control_frame,image=next_button_image,borderwidth=0,width=0,height=100)
-previous_button = Button (control_frame,image=previous_button_image,borderwidth=0,width=200,height=100)
+play_button = Button (control_frame,image=play_button_image,borderwidth=10,width=60,height=50)
+pause_button = Button (control_frame,image=pause_button_image,borderwidth=10,width=60,height=50)
+next_button = Button (control_frame,image=next_button_image,borderwidth=10,width=60,height=50)
+previous_button = Button (control_frame,image=previous_button_image,borderwidth=10,width=60,height=50)
 
-play_button.grid(row=0, column=1, padx=1,pady=2)
-pause_button.grid(row=0, column=2, padx=1,pady=2)
-next_button.grid(row=0, column=3, padx=1,pady=2)
-previous_button.grid(row=0, column=0 , padx=2,pady=2)
+play_button.grid(row=0, column=1, padx=0.000001,pady=0.0000002)
+pause_button.grid(row=0, column=2, padx=0.000001,pady=0.000002)
+next_button.grid(row=0, column=3, padx=0.000001,pady=0.0000002)
+previous_button.grid(row=0, column=0 , padx=0.000001,pady=0.0000002)
 
 root.mainloop() #run the code
