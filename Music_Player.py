@@ -1,11 +1,14 @@
+import random
 from tkinter import filedialog
 from tkinter import * #graphic ui
+from mutagen.mp3 import MP3
 import pygame
 import os
+import tkinter.ttk as ttk
 
 root = Tk()
 root.title("My Music")
-root.geometry("500x320")
+root.geometry("500x380")
 
 pygame.mixer.init() #initialise the audio functions
 menu_bar = Menu(root)
@@ -31,15 +34,37 @@ def Load_Music():
     current_song = songs[song_list.curselection()[0]]    
 
 
+def Play_Time():
+    global song_lenght
+    current_time = pygame.mixer.music.get_pos() / 1000  # convert milliseconds to seconds
+    
+    if slider.get() != current_time:
+        pygame.mixer.music.seek(slider.get())
+    minutes = int(current_time // 60)
+    seconds = int(current_time % 60)
+    time_str = f"{minutes:2d}:{seconds:2d}"  # format as MM:SS
+    song_lenght = pygame.mixer.music.get_pos() / 1000  # update song_lenght in real-time
+    status_bar.config(text=f" {time_str} / {int(song_lenght // 60):02d}:{int(song_lenght % 60):02d} ")
+    status_bar.after(1000, Play_Time)  # update every 1 second
+
+
 def Play_Music():
-    global current_song ,paused
+    global current_song, paused, song_lenght
 
     if not paused:
-        pygame.mixer.music.load(os.path.join(root.directory,current_song))
+        pygame.mixer.music.load(os.path.join(root.directory, current_song))
         pygame.mixer.music.play()
     else:
         pygame.mixer.music.unpause()
-        paused = True
+        paused = False
+
+    song_path = os.path.join(root.directory, current_song)
+    song_mutagen = MP3(song_path)
+    song_lenght = song_mutagen.info.length
+    slider.config(to=int(song_lenght), value=0)
+
+    Play_Time()
+
 
 def Pause_Music():
     global pause
@@ -69,34 +94,58 @@ def Previous_Music():
     except:
         pass
 
+def Random():
+    global songs,current_song
+    random.shuffle(songs)
+    song_list.delete(0, END)
+    for song in songs:
+        song_list.insert("end", song)
+    
+    current_song=songs[0]
+    song_list.selection_set(0)
+    Play_Music()
+    Play_Time()
+
+def Slide(x):
+    global song_lenght
+    pygame.mixer.music.play(start=float(x))
+    slider.config(value=float(x))
+    status_bar.config(text=f"{int(float(x) // 60):02d}:{int(float(x) % 60):02d} / {int(song_lenght // 60):02d}:{int(song_lenght % 60):02d}")
 
 
 organise_menu = Menu(menu_bar)
 organise_menu.add_command(label=">>Select the folder DJ<<",command= Load_Music)
-menu_bar.add_cascade(label="Organise",menu=organise_menu)
+menu_bar.add_cascade(label="Select",menu=organise_menu)
 
 song_list = Listbox(root,bg = "black",fg="white",width=100,height=15)
 song_list.pack()
 
-
-play_button_image = PhotoImage(file ="Play.png")
-pause_button_image = PhotoImage(file ="Pause.png")
-next_button_image = PhotoImage(file ="Next.png")
-previous_button_image = PhotoImage(file ="Previous.png")
 
 
 #frames
 control_frame = Frame(root)
 control_frame.pack()
 
-play_button = Button (control_frame,image=play_button_image,borderwidth=10,width=60,height=50,command=Play_Music)
-pause_button = Button (control_frame,image=pause_button_image,borderwidth=10,width=60,height=50,command=Pause_Music)
-next_button = Button (control_frame,image=next_button_image,borderwidth=10,width=60,height=50,command=Next_Music)
-previous_button = Button (control_frame,image=previous_button_image,borderwidth=10,width=60,height=50,command=Previous_Music)
+play_button = Button (control_frame,text= "PLAY",borderwidth=5,width=10,height=1,bg="MintCream",command=Play_Music)
+pause_button = Button (control_frame,text="PAUSE",borderwidth=5,width=10,height=1,bg="MintCream",command=Pause_Music)
+next_button = Button (control_frame,text="NEXT",borderwidth=5,width=10,height=1,bg="orange",command=Next_Music)
+previous_button = Button (control_frame,text="PREVIOUS",borderwidth=5,width=10,height=1,bg="orange",command=Previous_Music)
+random_button = Button (control_frame,text= "RANDOM",borderwidth=5,width=10,height=1,bg="SkyBlue",command= Random)
 
+#grid
+previous_button.grid(row=0, column=0 , padx=2,pady=2)
 play_button.grid(row=0, column=1, padx=2,pady=2)
 pause_button.grid(row=0, column=2, padx=2,pady=2)
 next_button.grid(row=0, column=3, padx=2,pady=2)
-previous_button.grid(row=0, column=0 , padx=2,pady=2)
+random_button.grid(row=0,column=4,padx=2,pady=2)
+
+
+
+#create status bar
+status_bar = Label(root, text="",bd=1, relief=GROOVE, anchor=E )                                                 
+status_bar.pack(fill=X,side=BOTTOM,ipady=4)
+
+slider=ttk.Scale(root,from_=0, to=200, orient=HORIZONTAL,value=0,length=400,command=Slide)
+slider.pack(fill=X,pady=30)
 
 root.mainloop() #run the code
