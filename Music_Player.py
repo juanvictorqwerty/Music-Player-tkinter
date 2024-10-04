@@ -54,7 +54,7 @@ def Play_Time():
     song_lenght = pygame.mixer.music.get_pos() / 1000  # update song_lenght in real-time
     status_bar.config(text=f" {time_str} / {int(song_lenght // 60):02d}:{int(song_lenght % 60):02d} ")
     status_bar.after(1000, Play_Time)  # update every 1 second
-    status_bar.after(1000, Play_Time) 
+    
 
 def Play_Music():
     global current_song, paused, song_lenght
