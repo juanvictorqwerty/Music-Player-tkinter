@@ -18,6 +18,9 @@ songs = []
 current_song =""
 paused = False
 
+current_song_label = Label(root, text="", font=("Arial", 12), wraplength=400)
+current_song_label.pack()
+
 def Load_Music():
     global current_song #so we can set it down
     root.directory = filedialog.askdirectory()
@@ -31,22 +34,27 @@ def Load_Music():
         song_list.insert("end",song)
 
     song_list.selection_set(0)
-    current_song = songs[song_list.curselection()[0]]    
+    current_song = songs[song_list.curselection()[0]]   
+    song_list.selection_set(0)
+    current_song_label.config(text=current_song)  # update the label 
 
+def Play_Selected_Music(event):
+    global current_song
+    current_song = song_list.get(song_list.curselection()[0])
+    current_song_label.config(text=current_song)  # update the label
+    Play_Music()
 
 def Play_Time():
     global song_lenght
     current_time = pygame.mixer.music.get_pos() / 1000  # convert milliseconds to seconds
     
-    if slider.get() != current_time:
-        pygame.mixer.music.seek(slider.get())
     minutes = int(current_time // 60)
     seconds = int(current_time % 60)
     time_str = f"{minutes:2d}:{seconds:2d}"  # format as MM:SS
     song_lenght = pygame.mixer.music.get_pos() / 1000  # update song_lenght in real-time
     status_bar.config(text=f" {time_str} / {int(song_lenght // 60):02d}:{int(song_lenght % 60):02d} ")
     status_bar.after(1000, Play_Time)  # update every 1 second
-
+    status_bar.after(1000, Play_Time) 
 
 def Play_Music():
     global current_song, paused, song_lenght
@@ -62,6 +70,8 @@ def Play_Music():
     song_mutagen = MP3(song_path)
     song_lenght = song_mutagen.info.length
     slider.config(to=int(song_lenght), value=0)
+    song_list.selection_set(0)
+    current_song_label.config(text=current_song)  # update the label
 
     Play_Time()
 
@@ -79,6 +89,8 @@ def Next_Music():
         song_list.selection_clear(0,END)
         song_list.selection_set(songs.index(current_song)+1)
         current_song = songs[song_list.curselection()[0]]
+        song_list.selection_set(0)
+        current_song_label.config(text=current_song)  # update the label
         Play_Music()
     except:
         pass
@@ -90,6 +102,8 @@ def Previous_Music():
         song_list.selection_clear(0,END)
         song_list.selection_set(songs.index(current_song)-1)
         current_song = songs[song_list.curselection()[0]]
+        song_list.selection_set(0)
+        current_song_label.config(text=current_song)  # update the label
         Play_Music()
     except:
         pass
@@ -101,6 +115,8 @@ def Random():
     for song in songs:
         song_list.insert("end", song)
     
+    song_list.selection_set(0)
+    current_song_label.config(text=current_song)  # update the label
     current_song=songs[0]
     song_list.selection_set(0)
     Play_Music()
@@ -112,6 +128,22 @@ def Slide(x):
     slider.config(value=float(x))
     status_bar.config(text=f"{int(float(x) // 60):02d}:{int(float(x) % 60):02d} / {int(song_lenght // 60):02d}:{int(song_lenght % 60):02d}")
 
+
+def Autoplay_Next(event):
+    global current_song, paused
+    try:
+        song_list.selection_clear(0, END)
+        current_index = songs.index(current_song)
+        if current_index < len(songs) - 1:
+            song_list.selection_set(current_index + 1)
+            current_song = songs[song_list.curselection()[0]]
+            Play_Music()
+        else:
+            song_list.selection_set(0)
+            current_song = songs[song_list.curselection()[0]]
+            Play_Music()
+    except:
+        pass
 
 organise_menu = Menu(menu_bar)
 organise_menu.add_command(label=">>Select the folder DJ<<",command= Load_Music)
@@ -147,5 +179,7 @@ status_bar.pack(fill=X,side=BOTTOM,ipady=4)
 
 slider=ttk.Scale(root,from_=0, to=200, orient=HORIZONTAL,value=0,length=400,command=Slide)
 slider.pack(fill=X,pady=30)
+root.bind(pygame.USEREVENT + 1, Autoplay_Next)
+song_list.bind("<<ListboxSelect>>", Play_Selected_Music)
 
 root.mainloop() #run the code
