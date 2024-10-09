@@ -1,10 +1,10 @@
 import random
-from tkinter import filedialog
-from tkinter import * #graphic ui
-from mutagen.mp3 import MP3
 import pygame
 import os
 import tkinter.ttk as ttk
+from tkinter import filedialog
+from tkinter import * #graphic ui
+from mutagen.mp3 import MP3
 
 root = Tk()
 root.title("My Music")
@@ -14,31 +14,31 @@ pygame.mixer.init() #initialise the audio functions
 menu_bar = Menu(root)
 root.config(menu = menu_bar)
 
+global songs_list
 songs_list = []
+global current_song
 current_song =""
 global paused 
 paused= False
 global song_lenght
 song_lenght=0
-
-
+file_path=[]
 current_song_label = Label(root, text="", font=("Arial", 12), wraplength=400)
 current_song_label.pack()
 
 def Load_Music():
     global current_song #so we can set it down
-    root.directory = filedialog.askdirectory()
+    root.filenames = filedialog.askopenfilenames()
 
-    for song in os.listdir(root.directory):
-        name,extension = os.path.splitext(song)
-        if extension == ".mp3" or extension==".Mp3" or extension==".MP3" or  extension==".mP3":
-            songs_list.append(song)
+    for song in root.filenames:
+        songs_list.append(os.path.basename(song))
 
     for song in songs_list:
         song_box.insert("end",song)
     
     song_box.selection_set(0)
-    current_song = songs_list[song_box.curselection()[0]]   
+    current_song = songs_list[song_box.curselection()[0]]
+    Play_Music()
     song_box.selection_set(0)
     current_song_label.config(text=current_song)  # update the label
     
@@ -60,18 +60,13 @@ def Play_Time():
     converted_current_song = f"{minutes:2d}:{seconds:2d}"  # format as MM:SS
     
     current_song=song_box.curselection()
-    song_path = os.path.join(root.directory, song_box.get(current_song))
+    song_path = os.path.join(root.filenames, song_box.get(current_song))
     song_mutagen = MP3(song_path)
     song_lenght = song_mutagen.info.length
     #slider.config(to=int(song_lenght), value=0)
 
     status_bar.config(text=f" {converted_current_song} / {int(song_lenght// 60):02d}:{int(song_lenght % 60):02d} ")
     status_bar.after(1000, Play_Time)  # update every 1 second
-    
-    
-
-    if current_time==song_lenght:
-      Next_Music()
 
 
 def Pause_Music(is_paused):
@@ -86,20 +81,26 @@ def Pause_Music(is_paused):
         paused = False
 
 def Play_Music():
-    global current_song, paused,song_lenght
+    global  paused,song_lenght
 
     if not paused:
-        pygame.mixer.music.load(os.path.join(root.directory, current_song))
+        current_song = song_box.get(song_box.curselection()[0])
+        current_song_index= songs_list.index(current_song)
+        current_song_path=root.filenames[current_song_index]
+        pygame.mixer.music.load(current_song_path) 
         pygame.mixer.music.play()
+        #print(song_index)
     else:
         pygame.mixer.music.unpause()
 
     slider_position = int(song_lenght)
     slider.config(to=slider_position)
+    slider.set(0)
 
     current_song_label.config(text=current_song)  # update the label
     
     Play_Time()
+
 
 
 def Next_Music():
@@ -128,6 +129,7 @@ def Previous_Music():
     except:
         pass
 
+
 def Random():
     global songs_list,current_song
     random.shuffle(songs_list)
@@ -150,13 +152,12 @@ def Slide(x):
     status_bar.config(text=f"{int(float(x) // 60):02d}:{int(float(x) % 60):02d} / {int(song_lenght // 60):02d}:{int(song_lenght % 60):02d}")
 
 
-
 Add_Songs_Menu = Menu(menu_bar)
 Add_Songs_Menu.add_command(label=">>Select the folder DJ<<",command= Load_Music)
 menu_bar.add_cascade(label="Add Songs",menu=Add_Songs_Menu,activebackground="MintCream",activeforeground="black")
 
 song_box = Listbox(root,bg = "black",fg="MintCream",width=100,height=15,selectbackground="green",selectforeground="white")
-song_box.pack(fill="both",pady=3)
+song_box.pack(fill="both",pady=1)
 
 
 
@@ -172,18 +173,18 @@ random_button = Button (control_frame,text= "RANDOM",borderwidth=2,width=10,heig
 
 
 #grid
-previous_button.grid(row=0, column=0 , padx=2,pady=5)
-play_button.grid(row=0, column=1, padx=2,pady=5)
-pause_button.grid(row=0, column=5, padx=2,pady=5)
-next_button.grid(row=0, column=2, padx=2,pady=5)
-random_button.grid(row=0,column=4,padx=2,pady=5)
+previous_button.grid(row=0, column=0 , padx=2,pady=1)
+play_button.grid(row=0, column=1, padx=2,pady=1)
+pause_button.grid(row=0, column=5, padx=2,pady=1)
+next_button.grid(row=0, column=2, padx=2,pady=1)
+random_button.grid(row=0,column=4,padx=2,pady=1)
 
 if paused==True:
     pause_button.grid_forget()
 
 #create status bar
 status_bar = Label(root, text="",bd=1, relief=GROOVE, anchor=E )                                                 
-status_bar.pack(fill=X,side=BOTTOM,ipady=4)
+status_bar.pack(fill=X,side=BOTTOM,ipady=2)
 
 slider=ttk.Scale(root,from_=0, to=200, orient=HORIZONTAL,value=0,command=Slide)
 slider.pack(fill=X,pady=2)
