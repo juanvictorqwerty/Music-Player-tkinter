@@ -28,7 +28,7 @@ current_song_label.pack()
 
 def Load_Music():
     global current_song #so we can set it down
-    root.filenames = filedialog.askopenfilenames()
+    root.filenames = list(filedialog.askopenfilenames())
 
     for song in root.filenames:
         songs_list.append(os.path.basename(song))
@@ -85,11 +85,10 @@ def Play_Music():
 
     if not paused:
         current_song = song_box.get(song_box.curselection()[0])
-        current_song_index= songs_list.index(current_song)
-        current_song_path=root.filenames[current_song_index]
-        pygame.mixer.music.load(current_song_path) 
+        #current_song_index = songs_list.index(current_song)
+        current_song_path = os.path.join(os.path.dirname(root.filenames[0]), current_song)  # get the full path to the file
+        pygame.mixer.music.load(current_song_path)  # load the music file using the path
         pygame.mixer.music.play()
-        #print(song_index)
     else:
         pygame.mixer.music.unpause()
 
