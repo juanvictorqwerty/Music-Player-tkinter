@@ -52,7 +52,7 @@ def Play_Time():
     global current_time
 
     current_time = pygame.mixer.music.get_pos()/1000  # convert milliseconds to seconds
-    
+    print("CT",current_time)
     minutes = int(current_time // 60)
     seconds = int(current_time % 60)
     converted_current_song = f"{minutes:2d}:{seconds:2d}"  # format as MM:SS
@@ -63,8 +63,6 @@ def Play_Time():
     song_mutagen = MP3(song_path)
     song_lenght = song_mutagen.info.length
     
-    slider.config(value= current_time)
-    #slider.config(to=int(song_lenght), value=0)
 
     status_bar.config(text=f" {converted_current_song} / {int(song_lenght// 60):02d}:{int(song_lenght % 60):02d} ")
     status_bar.after(1000, Play_Time)  # update every 1 second
@@ -99,10 +97,6 @@ def Play_Music():
     song_path = root.filenames[current_song_index]
     song_mutagen = MP3(song_path)
     song_lenght2 = song_mutagen.info.length    
-
-    slider_position = int(song_lenght2)
-    slider.config(to=slider_position,value=0)
-    slider.set(0)
 
     current_song_label.config(text=current_song)  # update the label
     Play_Time()
@@ -148,18 +142,36 @@ def Random():
     Play_Music()
     Play_Time()
 
+def Jump_Forward():
+    """Jump 10 seconds forward in the current song."""
+    # Get the current time in seconds
+    try:
+        current_time = pygame.mixer.music.get_pos() / 1000  # get current position in seconds
+        
+        current_time = current_time + 10
+        
+        pygame.mixer.music.stop()  # stop the current music
+        pygame.mixer.music.play(start=current_time)  # play from the new position
+        print(current_time)
+    except:
+        pass
 
-def Slide(x): 
-    global song_lenght3
-    #pygame.mixer.music.play(start=float(x))
-    #slider.config(value=float(x))
-    #status_bar.config(text=f"{int(float(x) // 60):02d}:{int(float(x) % 60):02d} / {int(song_lenght // 60):02d}:{int(song_lenght % 60):02d}")
-    current_song_index= song_box.curselection()[0]
+def Jump_Backward():
+    """Jump 10 seconds backward in the current song."""
+    # Get the current time in seconds
+    current_time = pygame.mixer.music.get_pos() / 1000  # get current position in seconds
     
-    song_path = root.filenames[current_song_index]
-    song_mutagen = MP3(song_path)
-    song_lenght3 = song_mutagen.info.length
-    slider_label.config(text= f"{int(slider.get())} of {song_lenght3}")
+    # Subtract 10 seconds from the current time
+    new_time = current_time - 10
+    
+    # Ensure we don't jump before the start of the song
+    if new_time < 0:
+        new_time = 0
+    
+    # Jump to the new position
+    pygame.mixer.music.play(loops=0, start=new_time)
+    
+
 
 Add_Songs_Menu = Menu(menu_bar)
 Add_Songs_Menu.add_command(label=">>Select The Songs DJ<<",command= Load_Music)
@@ -179,25 +191,19 @@ pause_button = Button (control_frame,text="PAUSE",borderwidth=2,width=10,height=
 next_button = Button (control_frame,text="NEXT",borderwidth=2,width=10,height=1,bg="orange",command=Next_Music)
 previous_button = Button (control_frame,text="PREVIOUS",borderwidth=2,width=10,height=1,bg="orange",command=Previous_Music)
 random_button = Button (control_frame,text= "RANDOM",borderwidth=2,width=10,height=1,bg="SkyBlue",command= Random)
-
+jump_forward_button= Button(control_frame,text= "+10",borderwidth=2,width=10,height=1,bg="gray",command= Jump_Forward)
 #grid
 previous_button.grid(row=0, column=0 , padx=2,pady=1)
 play_button.grid(row=0, column=1, padx=2,pady=1)
 pause_button.grid(row=0, column=5, padx=2,pady=1)
 next_button.grid(row=0, column=2, padx=2,pady=1)
 random_button.grid(row=0,column=4,padx=2,pady=1)
+jump_forward_button.grid(row=0,column=6,padx=2,pady=1)
 
 #create status bar
 status_bar = Label(root, text="",bd=1, relief=GROOVE, anchor=E )                                                 
 status_bar.pack(fill=X,side=BOTTOM,ipady=2)
 
-slider=ttk.Scale(root,from_=0, to=200, orient=HORIZONTAL,value=0,command=Slide)
-slider.pack(fill=X,pady=2)
 
-#song_box.bind("<<ListboxSelect>>", Play_Selected_Music)
-
-
-slider_label = Label(root,text="0")
-slider_label.pack(pady=10)
 
 root.mainloop() #run the code
