@@ -143,21 +143,22 @@ def Random():
     Play_Time()
 
 def Jump_Forward():
-    """Jump 10 seconds forward in the current song."""
+
     # Get the current time in seconds
     try:
-        current_time = pygame.mixer.music.get_pos() / 1000  # get current position in seconds
+        current_time = pygame.mixer.music.get_pos() // 1000  # get current position in seconds
         
-        current_time = current_time + 10
+        current_time = (current_time + 10)
         
-        pygame.mixer.music.stop()  # stop the current music
-        pygame.mixer.music.play(start=current_time)  # play from the new position
+        #pygame.mixer.music.pause()  # stop the current music
+        pygame.mixer.music.set_pos(current_time) # play from the new position
         print(current_time)
+        Play_Time()
     except:
         pass
 
 def Jump_Backward():
-    """Jump 10 seconds backward in the current song."""
+
     # Get the current time in seconds
     current_time = pygame.mixer.music.get_pos() / 1000  # get current position in seconds
     
