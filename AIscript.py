@@ -1,12 +1,9 @@
-import random
-import pygame
 import os
+import pygame
 import tkinter as tk
 from tkinter import filedialog
-from tkinter import * #graphic ui
+from tkinter import *
 from mutagen.mp3 import MP3
-
-
 
 class Song:
     def __init__(self, filepath):
