@@ -1,7 +1,7 @@
 import random
 import pygame
 import os
-import tkinter as tk
+import tkinter as ttk
 from tkinter import filedialog
 from tkinter import * #graphic ui
 from mutagen.mp3 import MP3
@@ -21,17 +21,19 @@ class Song:
         return audio.info.length
 
 
-class MusicPlayer:
+class MusicPlayer():
     def __init__(self, root):
         self.root = root
         self.root.title("Music Player")
         self.root.geometry("500x400")
 
-        pygame.mixer.init()  # Initialize the mixer
+        pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=8192)  # Initialize the mixer
 
         self.songs = []
         self.current_song_index = 0
+        self.random=[]
         self.paused = False
+
 
         self.setup_ui()
 
@@ -66,16 +68,12 @@ class MusicPlayer:
         Button(control_frame, text="Pause", command=self.toggle_pause).grid(row=0, column=1, padx=5)
         Button(control_frame, text="Next", command=self.next_music).grid(row=0, column=2, padx=5)
         Button(control_frame, text="Previous", command=self.previous_music).grid(row=0, column=3, padx=5)
+        Button(control_frame, text="Random", command=self.Random).grid(row=0, column=4, padx=5)
 
 
     def setup_status_bar(self):
         self.current_song_label = Label(self.root, text="", font=("Arial", 12))
         self.current_song_label.pack(pady=10)
-
-
-    def setup_slider(self):
-        self.slider = Scale(self.root, from_=0, to=100, orient='horizontal', command=self.seek_music)
-        self.slider.pack(fill='x', ipady=2)
 
 
     def load_music(self):
@@ -86,17 +84,39 @@ class MusicPlayer:
             self.song_box.insert(END, song.basename)
 
         self.play_music()
-        
+
 
     def play_music(self):
+
         if self.songs:
             current_song = self.songs[self.current_song_index]
             pygame.mixer.music.load(current_song.filepath)
             pygame.mixer.music.play()
             self.current_song_label.config(text=f"Playing: {current_song.basename} (Length: {int(current_song.length)}s)")
+
             self.slider.config(to=current_song.length)  # Set the slider max to song length
             self.update_slider()  # Start updating the slider position
+            current_song_position = pygame.mixer.music.get_pos()
+            print(current_song_position)
+            self.position_label.config(text=f"{int(current_song_position)//60} : {int(current_song_position%60)} / {int(current_song.length)//60} : {int(current_song.length%60)} ")
+            self.update_time_elapsed()
 
+
+    def update_time_elapsed(self):
+        if self.songs:
+            current_song = self.songs[self.current_song_index]
+            current_song_position = pygame.mixer.music.get_pos()
+
+        if current_song_position == -1:  # If the song is not playing, get_pos() returns -1
+            current_song_position = 0
+
+        minutes = int(current_song_position // 60000)
+        seconds = int((current_song_position % 60000) // 1000)
+
+        self.position_label.config(text=f"{minutes}:{seconds:02d} / {int(current_song.length)//60} : {int(current_song.length%60):02d}")
+
+        # Call the update_position method again after 1000 milliseconds (1 second)
+        self.root.after(1000, self.update_time_elapsed)
 
     def toggle_pause(self):
         if self.paused:
@@ -115,6 +135,22 @@ class MusicPlayer:
         self.current_song_index = (self.current_song_index -1) % len(self.songs)
         self.play_music()
 
+    def Random(self):
+        random.shuffle(self.songs)
+        self.song_box.delete(0, END)
+        for song in self.songs:
+            self.song_box.insert("end", song.basename)
+        self.current_song_index=0
+        self.play_music()
+
+
+    def setup_slider(self):
+        self.slider = Scale(self.root, from_=0, to=100, orient='horizontal', command=self.seek_music)
+        self.slider.pack(fill='x', ipady=2)
+
+        # Create a label to display the current position and length
+        self.position_label = Label(self.root,text="hello", font=("Arial", 10))
+        self.position_label.pack(pady=5)
 
     def seek_music(self, value):
         """Seek to the position specified by the slider."""
@@ -127,14 +163,17 @@ class MusicPlayer:
 
 
     def update_slider(self):
-        """Update the slider position according to the current playback position."""
-        if self.songs and pygame.mixer.music.get_busy():
-            current_position = pygame.mixer.music.get_pos() / 1000  # Get position in seconds
-            self.slider.set(current_position)  # Update the slider position
-            self.root.after(1000, self.update_slider)  # Update every second
+        if self.songs:
+            current_song = self.songs[self.current_song_index]
+            current_position = pygame.mixer.music.get_pos() / 1000  # Get current position in seconds
 
+            # Update the slider position
+            self.slider.set(current_position)
+
+            # Call this method again after 100 milliseconds (0.1 seconds)
+            self.root.after(100, self.update_slider)
 
 if __name__ == "__main__":
-    root = tk.Tk()
+    root = ttk.Tk()
     player = MusicPlayer(root)
     root.mainloop()
