@@ -57,6 +57,7 @@ class MusicPlayer():
         self.song_box = Listbox(self.root, bg="black", fg="white", width=60, height=15,
                                 selectbackground="green", selectforeground="black")
         self.song_box.pack(fill='both')
+        self.song_box.bind('<<ListboxSelect>>', self.play_selected_song)
 
 
     def setup_controls(self):
@@ -67,9 +68,9 @@ class MusicPlayer():
         Button(control_frame, text="Pause",background="Yellow", command=self.toggle_pause).grid(row=0, column=2, padx=5)
         Button(control_frame, text="Next",background="SkyBlue", command=self.next_music).grid(row=0, column=3, padx=5)
         Button(control_frame, text="Previous",background="SkyBlue", command=self.previous_music).grid(row=0, column=0, padx=5)
-        Button(control_frame, text="Random",background="Gray", command=self.Random).grid(row=0, column=4, padx=5)
+        Button(control_frame, text="Random",background="Gray", command=self.shuffle_playlist).grid(row=0, column=4, padx=5)
 
-         # Add a label for the current time and song length
+        # Add a label for the current time and song length
         self.position_label = Label(self.root, text="0:00 / 0:00", font=("Arial", 10))
         self.position_label.pack(pady=10)  # Adjust padding as needed
 
@@ -99,7 +100,7 @@ class MusicPlayer():
             #self.slider.config(to=current_song.length)  # Set the slider max to song length
 
             current_song_position = pygame.mixer.music.get_pos()
-            
+
             self.position_label.config(text=f"{int(current_song_position)//60} : {int(current_song_position%60)} / {int(current_song.length)//60} : {int(current_song.length%60)} ")
             self.update_time_elapsed()
 
@@ -113,6 +114,9 @@ class MusicPlayer():
 
         if current_song_position >= current_song.length * 1000:  # Check if the song has finished
             self.next_music()
+
+        if current_song_position<0:
+            current_song_position=0
 
 
         minutes = int(current_song_position // 60000)
@@ -140,7 +144,7 @@ class MusicPlayer():
         self.current_song_index = (self.current_song_index -1) % len(self.songs)
         self.play_music()
 
-    def Random(self):
+    def shuffle_playlist(self):
         random.shuffle(self.songs)
         self.song_box.delete(0, END)
         for song in self.songs:
@@ -148,6 +152,12 @@ class MusicPlayer():
         self.current_song_index=0
         self.play_music()
 
+    def play_selected_song(self, event):
+    # Get the index of the selected song
+        selected_index = self.song_box.curselection()
+        if selected_index:  # Check if there is a selection
+            self.current_song_index = selected_index[0]  # Get the first selected index
+            self.play_music()  # Play the selected song
 
     #def setup_slider(self):
      #   self.slider = Scale(self.root, from_=0, to=100, orient='horizontal', command=self.seek_music)
