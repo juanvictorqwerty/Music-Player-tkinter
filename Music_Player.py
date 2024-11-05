@@ -36,6 +36,10 @@ class MusicPlayer():
 
         self.setup_ui()
 
+        self.last_click_time = 0  # Initialize last click time
+        self.double_click_threshold = 300  # Time in milliseconds for double click detection
+        #all variables in the class are initialized here
+
 
     def setup_ui(self):
         self.setup_menu()
@@ -57,7 +61,7 @@ class MusicPlayer():
         self.song_box = Listbox(self.root, bg="black", fg="white", width=60, height=15,
                                 selectbackground="green", selectforeground="black")
         self.song_box.pack(fill='both')
-        self.song_box.bind('<<ListboxSelect>>', self.play_selected_song)
+        self.song_box.bind('<ButtonRelease-1>', self.detect_double_click)
 
 
     def setup_controls(self):
@@ -151,6 +155,12 @@ class MusicPlayer():
             self.song_box.insert("end", song.basename)
         self.current_song_index=0
         self.play_music()
+
+    def detect_double_click(self, event):
+        current_time = pygame.time.get_ticks()  # Get current time in milliseconds
+        if current_time - self.last_click_time <= self.double_click_threshold:
+            self.play_selected_song(event)  # Call the play_selected_song if it's a double click
+        self.last_click_time = current_time  # Update last click time
 
     def play_selected_song(self, event):
     # Get the index of the selected song
